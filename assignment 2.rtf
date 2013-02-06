@@ -1,0 +1,393 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil Consolas;}{\f1\fnil\fcharset0 Calibri;}}
+{\colortbl ;\red0\green0\blue255;\red255\green255\blue255;\red0\green0\blue0;\red163\green21\blue21;\red0\green128\blue0;}
+{\*\generator Riched20 6.2.9200}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\cf1\highlight2\f0\fs19\lang9 #if\cf3  \cf1 defined\cf3 (__APPLE_CC__)\par
+\cf1 #include\cf4 <OpenGL/gl.h>\cf3\par
+\cf1 #include\cf4 <OpenGL/glu.h>\cf3\par
+\cf1 #include\cf4 <GLUT/glut.h>\cf3\par
+\cf1 #elif\cf3  \cf1 defined\cf3 (WIN32)\par
+\cf1 #include\cf4 <windows.h>\cf3\par
+\cf1 #include\cf4 <GL/gl.h>\cf3\par
+\cf1 #include\cf4 <GL/glu.h>\cf3\par
+\cf1 #include\cf4 <GL/glut.h>\cf3\par
+\cf1 #else\cf3\par
+\cf1 #include\cf4 <GL/gl.h>\cf3\par
+\cf1 #include\cf4 <GL/glu.h>\cf3\par
+\cf1 #include\cf4 <GL/glut.h>\cf3\par
+\cf1 #include\cf4 <stdint.h>\cf3\par
+\cf1 #endif\cf3\par
+\par
+\cf1 #include\cf4 <iostream>\cf3\par
+\cf1 #include\cf4 <stdlib.h>\cf3\par
+\par
+\cf1 void\cf3  drawSun();\par
+\cf1 void\cf3  drawMercury();\par
+\cf1 void\cf3  drawVenus();\par
+\cf1 void\cf3  drawEarth();\par
+\cf1 void\cf3  drawMars();\par
+\cf1 void\cf3  drawJupiter();\par
+\cf1 void\cf3  drawSaturn();\par
+\cf1 void\cf3  drawUranus();\par
+\cf1 void\cf3  drawNeptune();\par
+\cf1 void\cf3  drawPluto();\par
+\cf1 void\cf3  animate();\par
+\cf1 void\cf3  drawMoon();\par
+\cf1 void\cf3  drawLines();\par
+\cf1 void\cf3  drawSaturnSphere();\par
+\par
+\par
+\cf1 static\cf3  \cf1 float\cf3  earthAxis;\par
+\cf1 static\cf3  \cf1 float\cf3  sunAxis;\par
+\cf1 static\cf3  \cf1 float\cf3  mercuryAxis;\par
+\cf1 static\cf3  \cf1 float\cf3  venusAxis;\par
+\cf1 static\cf3  \cf1 float\cf3  marsAxis;\par
+\cf1 static\cf3  \cf1 float\cf3  jupiterAxis;\par
+\cf1 static\cf3  \cf1 float\cf3  saturnAxis;\par
+\cf1 static\cf3  \cf1 float\cf3  uranusAxis;\par
+\cf1 static\cf3  \cf1 float\cf3  neptuneAxis;\par
+\cf1 static\cf3  \cf1 float\cf3  plutoAxis;\par
+\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\cf5 /// Global State Variables ///////////////////////////////////////\cf3\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\par
+\cf5 // time increment between calls to idle() in ms,\cf3\par
+\cf5 // currently set to 30 FPS\cf3\par
+\cf1 float\cf3  dt = 1000.0f*1.0f/30.0f;\par
+\par
+\cf5 // flag to indicate that we should clean up and exit\cf3\par
+\cf1 bool\cf3  quit = \cf1 false\cf3 ;\par
+\par
+\cf5 // window handles for mother ship and scout ship\cf3\par
+\cf1 int\cf3  mother_window, scout_window;\par
+\par
+\cf5 // display width and height\cf3\par
+\cf1 int\cf3  disp_width=512, disp_height=512;\par
+\par
+\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\cf5 /// Initialization/Setup and Teardown ////////////////////////////\cf3\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\par
+\cf5 // set up opengl state, allocate objects, etc.  This gets called\cf3\par
+\cf5 // ONCE PER WINDOW, so don't allocate your objects twice!\cf3\par
+\cf1 void\cf3  init()\{\par
+    \cf5 /////////////////////////////////////////////////////////////\cf3\par
+    \cf5 /// TODO: Put your initialization code here! ////////////////\cf3\par
+    \cf5 /////////////////////////////////////////////////////////////\cf3\par
+    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );\par
+\par
+    glViewport( 0, 0, glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT) );\par
+    glEnable( GL_DEPTH_TEST );\par
+    glEnable( GL_NORMALIZE );\par
+    \par
+    \cf5 // lighting stuff\cf3\par
+    GLfloat ambient[] = \{0.0, 0.0, 0.0, 1.0\};\par
+    GLfloat diffuse[] = \{0.9, 0.9, 0.9, 1.0\};\par
+    GLfloat specular[] = \{0.4, 0.4, 0.4, 1.0\};\par
+    GLfloat position0[] = \{1.0, 1.0, 1.0, 0.0\};\par
+    glLightfv( GL_LIGHT0, GL_POSITION, position0 );\par
+    glLightfv( GL_LIGHT0, GL_AMBIENT, ambient );\par
+    glLightfv( GL_LIGHT0, GL_DIFFUSE, diffuse );\par
+    glLightfv( GL_LIGHT0, GL_SPECULAR, specular );\par
+    GLfloat position1[] = \{-1.0, -1.0, -1.0, 0.0\};\par
+    glLightfv( GL_LIGHT1, GL_POSITION, position1 );\par
+    glLightfv( GL_LIGHT1, GL_AMBIENT, ambient );\par
+    glLightfv( GL_LIGHT1, GL_DIFFUSE, diffuse );\par
+    glLightfv( GL_LIGHT1, GL_SPECULAR, specular );\par
+    \par
+    glEnable( GL_LIGHTING );\par
+    glEnable( GL_LIGHT0 );\par
+    glEnable( GL_LIGHT1 );\par
+    glEnable( GL_COLOR_MATERIAL );\par
+    \par
+\}\par
+\par
+\cf5 // free any allocated objects and return\cf3\par
+\cf1 void\cf3  cleanup()\{\par
+    \cf5 /////////////////////////////////////////////////////////////\cf3\par
+    \cf5 /// TODO: Put your teardown code here! //////////////////////\cf3\par
+    \cf5 /////////////////////////////////////////////////////////////\cf3\par
+\par
+\}\par
+\par
+\par
+\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\cf5 /// Callback Stubs ///////////////////////////////////////////////\cf3\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\par
+\cf5 // window resize callback\cf3\par
+\cf1 void\cf3  resize_callback( \cf1 int\cf3  width, \cf1 int\cf3  height )\{    \par
+    \cf5 /////////////////////////////////////////////////////////////\cf3\par
+    \cf5 /// TODO: Put your resize code here! ////////////////////////\cf3\par
+    \cf5 /////////////////////////////////////////////////////////////\cf3\par
+\}\par
+\par
+\cf5 // keyboard callback\cf3\par
+\cf1 void\cf3  keyboard_callback( \cf1 unsigned\cf3  \cf1 char\cf3  key, \cf1 int\cf3  x, \cf1 int\cf3  y )\{\par
+    \cf1 switch\cf3 ( key )\{\par
+        \cf1 case\cf3  27:\par
+            quit = \cf1 true\cf3 ;\par
+            \cf1 break\cf3 ;\par
+        \cf1 default\cf3 :\par
+            \cf1 break\cf3 ;\par
+    \}\par
+    \par
+    \cf5 /////////////////////////////////////////////////////////////\cf3\par
+    \cf5 /// TODO: Put your keyboard code here! //////////////////////\cf3\par
+    \cf5 /////////////////////////////////////////////////////////////\cf3\par
+    \par
+\}\par
+\par
+\cf5 // display callback\cf3\par
+\cf1 void\cf3  display_callback( \cf1 void\cf3  )\{\par
+    \cf1 int\cf3  current_window;\par
+    \par
+    \cf5 // retrieve the currently active window\cf3\par
+    current_window = glutGetWindow();\par
+    \par
+    \cf5 // clear the color and depth buffers\cf3\par
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);\par
+ \par
+\par
+    \cf5 /////////////////////////////////////////////////////////////\cf3\par
+    \cf5 /// TODO: Put your rendering code here! /////////////////////\cf3\par
+    \cf5 /////////////////////////////////////////////////////////////\cf3\par
+\tab glPushMatrix();\par
+\tab glRotatef(sunAxis,0,1,0.4);\par
+\tab\tab drawSun();\par
+\tab\tab glPushMatrix();\par
+\tab\tab\tab glTranslatef(0.4,0,0.5);\par
+\tab\tab\tab drawMercury();\par
+\tab\tab glPopMatrix();\par
+\tab\tab glPushMatrix();\par
+\tab\tab\tab glTranslatef(0.7,0,0.7);\par
+\tab\tab\tab drawVenus();\par
+\tab\tab glPopMatrix();\par
+\tab\tab glPushMatrix();\par
+\tab\tab\tab glTranslatef(1.0,0,0.9);\par
+\tab\tab\tab glRotatef(earthAxis,0,1,0.4);\par
+\tab\tab\tab drawEarth();\par
+\tab\tab\tab glPushMatrix();\par
+\tab\tab\tab\tab glTranslatef(0.2,0,0);\par
+\tab\tab\tab\tab drawMoon();\par
+\tab\tab\tab glPopMatrix();\par
+\tab\tab glPopMatrix();\par
+\tab\tab glPushMatrix();\par
+\tab\tab\tab glTranslatef(1.4,0,1.2);\par
+\tab\tab\tab drawMars();\par
+\tab\tab glPopMatrix();\par
+\tab\tab glPushMatrix();\par
+\tab\tab\tab glTranslatef(1.9,0,0);\par
+\tab\tab\tab drawJupiter();\par
+\tab\tab glPopMatrix();\par
+\tab\tab glPushMatrix();\par
+\tab\tab\tab glTranslatef(2.4,0,0);\par
+\tab\tab\tab drawSaturn();\par
+\tab\tab\tab glPushMatrix();\par
+\tab\tab\tab\tab drawSaturnSphere();\par
+\tab\tab\tab glPopMatrix();\par
+\tab\tab glPopMatrix();\par
+\tab\tab glPushMatrix();\par
+\tab\tab\tab glTranslatef(2.9,0,0);\par
+\tab\tab\tab drawUranus();\par
+\tab\tab glPopMatrix();\par
+\tab\tab glPushMatrix();\par
+\tab\tab\tab glTranslatef(3.4,0,0);\par
+\tab\tab\tab drawNeptune();\par
+\tab\tab glPopMatrix();\par
+\tab\tab glPushMatrix();\par
+\tab\tab\tab glTranslatef(3.9,0,0);\par
+\tab\tab\tab drawPluto();\par
+\tab\tab glPopMatrix();\par
+\par
+\tab glPopMatrix();\par
+\par
+    glMatrixMode(GL_PROJECTION);\par
+    glLoadIdentity();\par
+    gluPerspective( 70.0f, \cf1 float\cf3 (glutGet(GLUT_WINDOW_WIDTH))/\cf1 float\cf3 (glutGet(GLUT_WINDOW_HEIGHT)), 0.1f, 2000.0f );\par
+    \par
+    glMatrixMode(GL_MODELVIEW);\par
+    glLoadIdentity();\par
+    glTranslatef( 0.0f, 0.0f, -5.0f );\par
+\par
+    glBegin(GL_LINES);\par
+    glColor3f( 1.0f, 0.0f, 0.0f );\par
+    glVertex3f( 1.0f, 0.0f, 0.0f );\par
+    glVertex3f( 0.0f, 0.0f, 0.0f );\par
+    glColor3f( 0.0f, 1.0f, 0.0f );\par
+    glVertex3f( 0.0f, 1.0f, 0.0f );\par
+    glVertex3f( 0.0f, 0.0f, 0.0f );\par
+    glColor3f( 0.0f, 0.0f, 1.0f );\par
+    glVertex3f( 0.0f, 0.0f, 1.0f );\par
+    glVertex3f( 0.0f, 0.0f, 0.0f );\par
+    glEnd();\par
+\par
+    \cf5 // swap the front and back buffers to display the scene\cf3\par
+    glutSetWindow( current_window );\par
+    glutSwapBuffers();\par
+\}\par
+\par
+\cf5 // not exactly a callback, but sets a timer to call itself\cf3\par
+\cf5 // in an endless loop to update the program\cf3\par
+\cf1 void\cf3  idle( \cf1 int\cf3  value )\{\par
+    \par
+    \cf5 // if the user wants to quit the program, then exit the\cf3\par
+    \cf5 // function without resetting the timer or triggering\cf3\par
+    \cf5 // a display update\cf3\par
+    \cf1 if\cf3 ( quit )\{\par
+        \cf5 // cleanup any allocated memory\cf3\par
+        cleanup();\par
+        \par
+        \cf5 // perform hard exit of the program, since glutMainLoop()\cf3\par
+        \cf5 // will never return\cf3\par
+        exit(0);\par
+    \}\par
+    \par
+    \cf5 /////////////////////////////////////////////////////////////\cf3\par
+    \cf5 /// TODO: Put your idle code here! //////////////////////////\cf3\par
+    \cf5 /////////////////////////////////////////////////////////////\cf3\par
+\par
+    \par
+    \cf5 // set the currently active window to the mothership and\cf3\par
+    \cf5 // request a redisplay\cf3\par
+    glutSetWindow( mother_window );\par
+    glutPostRedisplay();\par
+    \par
+    \cf5 // now set the currently active window to the scout ship\cf3\par
+    \cf5 // and redisplay it as well\cf3\par
+    glutSetWindow( scout_window );\par
+    glutPostRedisplay();\par
+    \par
+    \cf5 // set a timer to call this function again after the\cf3\par
+    \cf5 // required number of milliseconds\cf3\par
+    glutTimerFunc( dt, idle, 0 );\par
+\}\par
+\par
+\cf1 void\cf3  drawSun()\{\par
+\tab glColor3f(1,2.5,2);\par
+\tab glutSolidSphere(0.2,100,100);\par
+\}\par
+\par
+\cf1 void\cf3  drawMercury()\{\par
+\tab glColor3f(0,1,0);\par
+\tab glutSolidSphere(0.06,100,100);\par
+\}\par
+\par
+\cf1 void\cf3  drawVenus()\{\par
+\tab glColor3f(0,1,0);\par
+\tab glutSolidSphere(0.07,100,100);\par
+\}\par
+\par
+\cf1 void\cf3  drawEarth()\{\par
+\tab glColor3f(0,1,0);\par
+\tab glutSolidSphere(0.08,100,100);\par
+\}\par
+\par
+\cf1 void\cf3  drawMars()\{\par
+\tab glColor3f(0,1,0);\par
+\tab glutSolidSphere(0.08,100,100);\par
+\}\par
+\par
+\cf1 void\cf3  drawJupiter()\{\par
+\tab glColor3f(0,1,0);\par
+\tab glutSolidSphere(0.14,100,100);\par
+\}\par
+\par
+\cf1 void\cf3  drawSaturn()\{\par
+\tab glColor3f(0,1,0);\par
+\tab glutSolidSphere(0.12,100,100);\par
+\}\par
+\par
+\cf1 void\cf3  drawSaturnSphere()\{\par
+\tab glColor3f(1,0,1);\par
+\tab glutSolidSphere(30,1,1);\par
+\}\par
+\par
+\cf1 void\cf3  drawUranus()\{\par
+\tab glColor3f(0,1,0);\par
+\tab glutSolidSphere(0.10,100,100);\par
+\}\par
+\par
+\cf1 void\cf3  drawNeptune()\{\par
+\tab glColor3f(0,1,0);\par
+\tab glutSolidSphere(0.09,100,100);\par
+\}\par
+\par
+\cf1 void\cf3  drawPluto()\{\par
+\tab glColor3f(0,1,0);\par
+\tab glutSolidSphere(0.10,100,100);\par
+\}\par
+\par
+\cf1 void\cf3  drawMoon()\{\par
+\tab glColor3f(1,0,0);\par
+\tab glutSolidSphere(0.04,100,100);\par
+\}\par
+\par
+\cf1 void\cf3  drawLines()\{\par
+\tab glColor3f(0,0,0);\par
+\tab glutWireSphere(3,1,1);\par
+\}\par
+\par
+\cf1 void\cf3  animate()\{\par
+\tab sunAxis+=0.1;\par
+\tab earthAxis+=0.9;\par
+\tab\cf1 if\cf3 (sunAxis>360) sunAxis = 0;\par
+\tab\cf1 if\cf3 (earthAxis>360) earthAxis = 0;\par
+\tab glutPostRedisplay();\par
+\}\par
+\par
+\par
+\par
+\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\cf5 /// Program Entry Point //////////////////////////////////////////\cf3\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\cf5 //////////////////////////////////////////////////////////////////\cf3\par
+\cf1 int\cf3  main( \cf1 int\cf3  argc, \cf1 char\cf3  **argv )\{\par
+    \cf5 // initialize glut\cf3\par
+    glutInit( &argc, argv );\par
+    \par
+    \cf5 // use double-buffered RGB+Alpha framebuffers with a depth buffer.\cf3\par
+    glutInitDisplayMode( GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE );\par
+    \par
+    \cf5 // initialize the mothership window\cf3\par
+    glutInitWindowSize( disp_width, disp_height );\par
+    glutInitWindowPosition( 0, 100 );\par
+    mother_window = glutCreateWindow( \cf4 "Mother Ship"\cf3  );\par
+    glutKeyboardFunc( keyboard_callback );\par
+    glutDisplayFunc( display_callback );\par
+    glutReshapeFunc( resize_callback );\par
+    \par
+    \cf5 // initialize the scout ship window\cf3\par
+    glutInitWindowSize( disp_width, disp_height );\par
+    glutInitWindowPosition( disp_width+50, 100 );\par
+    scout_window = glutCreateWindow( \cf4 "Scout Ship"\cf3  );\par
+    glutKeyboardFunc( keyboard_callback );\par
+    glutDisplayFunc( display_callback );\par
+    glutReshapeFunc( resize_callback );\par
+\tab glutIdleFunc(animate);\par
+    \par
+    glutSetWindow( mother_window );\par
+    init();\par
+    glutSetWindow( scout_window );\par
+    init();\par
+    \par
+    \cf5 // start the idle on a fixed timer callback\cf3\par
+    idle( 0 );\par
+    \par
+    \cf5 // start the blug main loop\cf3\par
+    glutMainLoop();\par
+    \par
+    \cf1 return\cf3  0;\par
+\}\cf0\highlight0\f1\fs22\par
+}
+ 
